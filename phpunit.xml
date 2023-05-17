@@ -7,8 +7,8 @@
          stopOnFailure="false"
          processIsolation="false"
 >
-    <testsuite name="ZendSentry test suite">
-        <directory>./tests/ZendSentryTest</directory>
+    <testsuite name="LaminasSentry test suite">
+        <directory>./tests</directory>
     </testsuite>
 
 

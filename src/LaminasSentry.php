@@ -1,44 +1,51 @@
 <?php
 
+declare(strict_types=1);
+
 /**
- * Bright Answer ZendSentry
+ * Andre Cardoso LaminasSentry
  *
- * This source file is part of the Bright Answer ZendSentry package
+ * This source file is part of the Andre Cardoso LaminasSentry package
  *
- * @package    ZendSentry\ZendSentry
+ * @package    LaminasSentry\LaminasSentry
  * @license    MIT License {@link /docs/LICENSE}
- * @copyright  Copyright (c) 2018, Bright Answer OÜ
+ * @copyright  Copyright (c) 2023, Andre Cardoso
  */
 
-namespace ZendSentry;
+namespace LaminasSentry;
 
 use Raven_Client as RavenClient;
 use Raven_ErrorHandler as RavenErrorHandler;
 
 /**
- * @package    ZendSentry\ZendSentry
+ * Class LaminasSentry
+ * @package LaminasSentry
  */
-class ZendSentry
+class LaminasSentry
 {
     /**
      * @var string $nonce
      */
     private static $nonce;
+
     /**
      * @var RavenClient $ravenClient
      */
     private $ravenClient;
+
     /**
      * @var RavenErrorHandler $ravenErrorHandler
      */
     private $ravenErrorHandler;
 
     /**
-     * @param RavenClient       $ravenClient
-     * @param RavenErrorHandler $ravenErrorHandler
+     * @param RavenClient $ravenClient
+     * @param RavenErrorHandler|null $ravenErrorHandler
      */
-    public function __construct(RavenClient $ravenClient, RavenErrorHandler $ravenErrorHandler = null)
-    {
+    public function __construct(
+        RavenClient $ravenClient,
+        ?RavenErrorHandler $ravenErrorHandler = null
+    ) {
         $this->ravenClient = $ravenClient;
         $this->setOrLoadRavenErrorHandler($ravenErrorHandler);
     }
@@ -46,7 +53,7 @@ class ZendSentry
     /**
      * @param null|RavenErrorHandler $ravenErrorHandler
      */
-    private function setOrLoadRavenErrorHandler($ravenErrorHandler)
+    private function setOrLoadRavenErrorHandler(?RavenErrorHandler $ravenErrorHandler)
     {
         if ($ravenErrorHandler !== null) {
             $this->ravenErrorHandler = $ravenErrorHandler;
@@ -65,12 +72,13 @@ class ZendSentry
 
     /**
      * @param bool $callExistingHandler
-     * @param int  $errorReporting
-     *
-     * @return ZendSentry
+     * @param int $errorReporting
+     * @return $this
      */
-    public function registerErrorHandler($callExistingHandler = true, $errorReporting = E_ALL): ZendSentry
-    {
+    public function registerErrorHandler(
+        bool $callExistingHandler = true,
+        int $errorReporting = E_ALL
+    ): LaminasSentry {
         $this->ravenErrorHandler->registerErrorHandler($callExistingHandler, $errorReporting);
         return $this;
     }
@@ -78,9 +86,9 @@ class ZendSentry
     /**
      * @param bool $callExistingHandler
      *
-     * @return ZendSentry
+     * @return LaminasSentry
      */
-    public function registerExceptionHandler($callExistingHandler = true): ZendSentry
+    public function registerExceptionHandler(bool $callExistingHandler = true): LaminasSentry
     {
         $this->ravenErrorHandler->registerExceptionHandler($callExistingHandler);
         return $this;
@@ -89,9 +97,9 @@ class ZendSentry
     /**
      * @param int $reservedMemorySize
      *
-     * @return ZendSentry
+     * @return LaminasSentry
      */
-    public function registerShutdownFunction($reservedMemorySize = 10): ZendSentry
+    public function registerShutdownFunction(int $reservedMemorySize = 10): LaminasSentry
     {
         $this->ravenErrorHandler->registerShutdownFunction($reservedMemorySize);
         return $this;
@@ -100,7 +108,7 @@ class ZendSentry
     /**
      * @return null|string
      */
-    public function getCSPNonce()
+    public function getCSPNonce(): ?string
     {
         return self::$nonce;
     }

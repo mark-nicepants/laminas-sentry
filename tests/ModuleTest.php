@@ -1,22 +1,26 @@
 <?php
 
-namespace ZendSentryTest;
+namespace LaminasSentryTests;
 
+use Laminas\Loader\StandardAutoloader;
+use LaminasSentry\Module as LaminasSentryModule;
 use PHPUnit\Framework\TestCase;
-use Zend\Loader\StandardAutoloader;
-use ZendSentry\Module as ZendSentryModule;
 
+/**
+ * Class ModuleTest
+ * @package LaminasSentryTests
+ */
 class ModuleTest extends TestCase
 {
     /**
-     * @var ZendSentryModule
+     * @var LaminasSentryModule
      */
     private $module;
 
     public function setUp()
     {
         parent::setUp();
-        $this->module = new ZendSentryModule();
+        $this->module = new LaminasSentryModule();
     }
 
     public function testDefaultModuleConfig()
@@ -33,7 +37,7 @@ class ModuleTest extends TestCase
         $expectedConfig = [
             StandardAutoloader::class => [
                 'namespaces' => [
-                    'ZendSentry' => realpath(__DIR__ . '/../../src/ZendSentry')
+                    'LaminasSentry' => realpath(__DIR__ . '/../../src/LaminasSentry')
                 ]
             ]
         ];

@@ -1,38 +1,43 @@
 <?php
 
+declare(strict_types=1);
+
 /**
- * Bright Answer ZendSentry
+ * Andre Cardoso LaminasSentry
  *
- * This source file is part of the Bright Answer ZendSentry package
+ * This source file is part of the Andre Cardoso LaminasSentry package
  *
- * @package    ZendSentry\Module
+ * @package    LaminasSentry\Module
  * @license    MIT License {@link /docs/LICENSE}
- * @copyright  Copyright (c) 2018, Bright Answer OÜ
+ * @copyright  Copyright (c) 2023, Andre Cardoso
  */
 
-namespace ZendSentry;
+namespace LaminasSentry;
 
-use Zend\EventManager\EventManager;
-use Zend\Mvc\MvcEvent;
-use Zend\ServiceManager\ServiceManager;
-use Zend\View\Helper\HeadScript;
-use ZendSentry\Mvc\View\Http\ExceptionStrategy as SentryHttpStrategy;
-use ZendSentry\Mvc\View\Console\ExceptionStrategy as SentryConsoleStrategy;
-use Zend\Mvc\View\Http\ExceptionStrategy;
+use Laminas\EventManager\EventManager;
+use Laminas\Log\Logger;
+use Laminas\Mvc\MvcEvent;
+use Laminas\Mvc\View\Http\ExceptionStrategy;
+use Laminas\ServiceManager\ServiceManager;
+use Laminas\View\Helper\HeadScript;
+use LaminasSentry\Mvc\View\Console\ExceptionStrategy as SentryConsoleStrategy;
+use LaminasSentry\Mvc\View\Http\ExceptionStrategy as SentryHttpStrategy;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use Raven_Client as Raven;
-use Zend\Log\Logger;
+use Raven_Exception;
 
 /**
  * Class Module
  *
- * @package ZendSentry
+ * @package LaminasSentry
  */
 class Module
 {
     const RAVENJS_VERSION = '3.27.0';
 
     /**
-     * Translates Zend Framework log levels to Raven log levels.
+     * Translates Laminas Framework log levels to Raven log levels.
      */
     private $logLevels = [
         0 => Raven::FATAL,
@@ -51,9 +56,9 @@ class Module
     protected $ravenClient;
 
     /**
-     * @var ZendSentry $zendSentry
+     * @var LaminasSentry $laminasSentry
      */
-    protected $zendSentry;
+    protected $laminasSentry;
 
     /**
      * @var $config
@@ -67,27 +72,31 @@ class Module
 
     /**
      * @param MvcEvent $event
+     * @return void
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
+     * @throws Raven_Exception
      */
     public function onBootstrap(MvcEvent $event)
     {
         // Setup RavenClient (provided by Sentry) and Sentry (provided by this module)
         $this->config = $event->getApplication()->getServiceManager()->get('Config');
 
-        if (!$this->config['zend-sentry']['use-module']) {
+        if (!$this->config['laminas-sentry']['use-module']) {
             return;
         }
 
-        if (isset($this->config['zend-sentry']['raven-config']) && \is_array($this->config['zend-sentry']['raven-config'])) {
-            $ravenConfig = $this->config['zend-sentry']['raven-config'];
+        if (isset($this->config['laminas-sentry']['raven-config']) && \is_array($this->config['laminas-sentry']['raven-config'])) {
+            $ravenConfig = $this->config['laminas-sentry']['raven-config'];
         } else {
             $ravenConfig = [];
         }
 
-        $sentryApiKey = $this->config['zend-sentry']['sentry-api-key'];
+        $sentryApiKey = $this->config['laminas-sentry']['sentry-api-key'];
 
         // Do preliminary checks only, Raven will parse the string further
         if (!$sentryApiKey || '' === $sentryApiKey || \is_null($sentryApiKey)) {
-            throw new \Raven_Exception('Missing Sentry API key.');
+            throw new Raven_Exception('Missing Sentry API key.');
         }
         $ravenClient  = new Raven($sentryApiKey, $ravenConfig);
 
@@ -97,34 +106,34 @@ class Module
         $serviceManager->setService('raven', $ravenClient);
 
         $this->ravenClient = $ravenClient;
-        $this->zendSentry  = new ZendSentry($ravenClient);
+        $this->laminasSentry  = new LaminasSentry($ravenClient);
 
         // Get the eventManager and set it as a member for convenience
         $this->eventManager = $event->getApplication()->getEventManager();
 
-        // If ZendSentry is configured to use the custom logger, attach the listener
-        if ($this->config['zend-sentry']['attach-log-listener']) {
+        // If LaminasSentry is configured to use the custom logger, attach the listener
+        if ($this->config['laminas-sentry']['attach-log-listener']) {
             $this->setupBasicLogging($event);
         }
 
-        // If ZendSentry is configured to log exceptions, a few things need to be set up
-        if ($this->config['zend-sentry']['handle-exceptions']) {
+        // If LaminasSentry is configured to log exceptions, a few things need to be set up
+        if ($this->config['laminas-sentry']['handle-exceptions']) {
             $this->setupExceptionLogging($event);
         }
 
-        // If ZendSentry is configured to log errors, register it as error handler
-        if ($this->config['zend-sentry']['handle-errors']) {
-            $errorReportingLevel = $this->config['zend-sentry']['error-reporting'] ?? -1;
-            $this->zendSentry->registerErrorHandler($this->config['zend-sentry']['call-existing-error-handler'], $errorReportingLevel);
+        // If LaminasSentry is configured to log errors, register it as error handler
+        if ($this->config['laminas-sentry']['handle-errors']) {
+            $errorReportingLevel = $this->config['laminas-sentry']['error-reporting'] ?? -1;
+            $this->laminasSentry->registerErrorHandler($this->config['laminas-sentry']['call-existing-error-handler'], $errorReportingLevel);
         }
 
-        // If ZendSentry is configured to log shutdown errors, register it
-        if ($this->config['zend-sentry']['handle-shutdown-errors']) {
-            $this->zendSentry->registerShutdownFunction();
+        // If LaminasSentry is configured to log shutdown errors, register it
+        if ($this->config['laminas-sentry']['handle-shutdown-errors']) {
+            $this->laminasSentry->registerShutdownFunction();
         }
 
-        // If ZendSentry is configured to log Javascript errors, add needed scripts to the view
-        if ($this->config['zend-sentry']['handle-javascript-errors']) {
+        // If LaminasSentry is configured to log Javascript errors, add needed scripts to the view
+        if ($this->config['laminas-sentry']['handle-javascript-errors']) {
             $this->setupJavascriptLogging($event);
         }
     }
@@ -135,7 +144,7 @@ class Module
     public function getAutoloaderConfig(): array
     {
         return [
-            'Zend\Loader\StandardAutoloader' => [
+            'Laminas\Loader\StandardAutoloader' => [
                 'namespaces' => [
                     __NAMESPACE__ => __DIR__ . '/src/' . __NAMESPACE__,
                 ]
@@ -188,16 +197,18 @@ class Module
 
     /**
      * 1. Registers Sentry as exception handler
-     * 2. Replaces the default ExceptionStrategy so Exception that are caught by Zend Framework can still be logged
+     * 2. Replaces the default ExceptionStrategy so Exception that are caught by Laminas Framework can still be logged
      *
      * @param MvcEvent $event
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
      */
     protected function setupExceptionLogging(MvcEvent $event)
     {
         // Register Sentry as exception handler for exception that bubble up to the top
-        $this->zendSentry->registerExceptionHandler($this->config['zend-sentry']['call-existing-exception-handler']);
+        $this->laminasSentry->registerExceptionHandler($this->config['laminas-sentry']['call-existing-exception-handler']);
 
-        // Replace the default ExceptionStrategy with ZendSentry's strategy
+        // Replace the default ExceptionStrategy with LaminasSentry's strategy
         if ($event->getApplication()->getServiceManager()->has('HttpExceptionStrategy')) {
             /** @var $exceptionStrategy ExceptionStrategy */
             $exceptionStrategy = $event->getApplication()->getServiceManager()->get('HttpExceptionStrategy');
@@ -207,14 +218,14 @@ class Module
         // Check if script is running in console
         $exceptionStrategy = (PHP_SAPI == 'cli') ? new SentryConsoleStrategy() : new SentryHttpStrategy();
         $exceptionStrategy->attach($this->eventManager);
-        $exceptionStrategy->setDisplayExceptions($this->config['zend-sentry']['display-exceptions']);
-        $exceptionStrategy->setDefaultExceptionMessage($this->config['zend-sentry'][(PHP_SAPI == 'cli') ? 'default-exception-console-message' : 'default-exception-message']);
+        $exceptionStrategy->setDisplayExceptions($this->config['laminas-sentry']['display-exceptions']);
+        $exceptionStrategy->setDefaultExceptionMessage($this->config['laminas-sentry'][(PHP_SAPI == 'cli') ? 'default-exception-console-message' : 'default-exception-message']);
         if ($exceptionStrategy instanceof SentryHttpStrategy && isset($this->config['view_manager']['exception_template'])) {
             $exceptionStrategy->setExceptionTemplate($this->config['view_manager']['exception_template']);
         }
         $ravenClient = $this->ravenClient;
 
-        // Attach an exception listener for the ZendSentry exception strategy, can be triggered from anywhere else too
+        // Attach an exception listener for the LaminasSentry exception strategy, can be triggered from anywhere else too
         $this->eventManager->getSharedManager()->attach(
             '*', 'logException', function ($event) use ($ravenClient) {
             /** @var $event MvcEvent */
@@ -229,30 +240,32 @@ class Module
      * Adds the necessary javascript, tries to prepend
      *
      * @param MvcEvent $event
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
      */
     protected function setupJavascriptLogging(MvcEvent $event)
     {
         /** @var HeadScript $headScript */
         $headScript    = $event->getApplication()->getServiceManager()->get('ViewHelperManager')->get('headscript');
 
-        $useRavenjsCDN = $this->config['zend-sentry']['use-ravenjs-cdn'] ?? false;
+        $useRavenjsCDN = $this->config['laminas-sentry']['use-ravenjs-cdn'] ?? false;
 
         if ($useRavenjsCDN) {
-            $ravenjsVersion = $this->config['zend-sentry']['ravenjs-version'] ?? self::RAVENJS_VERSION;
+            $ravenjsVersion = $this->config['laminas-sentry']['ravenjs-version'] ?? self::RAVENJS_VERSION;
             $cdnUri = sprintf('//cdn.ravenjs.com/%s/raven.min.js', $ravenjsVersion);
             $headScript->offsetSetFile(0, $cdnUri);
         } else {
-            $ravenjsSource = $this->config['zend-sentry']['ravenjs-source'] ?? false;
+            $ravenjsSource = $this->config['laminas-sentry']['ravenjs-source'] ?? false;
 
             if ($ravenjsSource) {
                 $headScript->offsetSetFile(0, $ravenjsSource);
             }
         }
 
-        $publicApiKey  = $this->convertKeyToPublic($this->config['zend-sentry']['sentry-api-key']);
-        $ravenjsConfig = json_encode($this->config['zend-sentry']['ravenjs-config']);
+        $publicApiKey  = $this->convertKeyToPublic($this->config['laminas-sentry']['sentry-api-key']);
+        $ravenjsConfig = json_encode($this->config['laminas-sentry']['ravenjs-config']);
 
-        $attributes = \is_null($this->zendSentry->getCSPNonce()) ? [] : ['nonce' => $this->zendSentry->getCSPNonce()];
+        $attributes = \is_null($this->laminasSentry->getCSPNonce()) ? [] : ['nonce' => $this->laminasSentry->getCSPNonce()];
 
         $headScript->offsetSetScript(1, sprintf("if (typeof Raven !== 'undefined') Raven.config('%s', %s).install()", $publicApiKey, $ravenjsConfig), 'text/javascript', $attributes);
     }

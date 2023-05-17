@@ -1,30 +1,37 @@
-# IMPORANT NOTICE (September 2019)! We are abandoning/deprecating this package. We will NOT be updating this package to the new Sentry SDK.
+# LaminasSentry
 
-## With the new Sentry SDKs it has become much easier to integrate directly with any project. This package creates way too much boilerplate and most of its code is not needed anymore. As for the JS integration it's much better to install the JS SDK via yarn or npm anyways so you can properly package and automate that stuff too.
+The ZendSentry author has abandoned the project, suggesting to use Sentry directly, but I've used this tool with Zend Framework, and
+it's awesome because you don't need to write a single line of code, just plug, configure and that's all.
 
-A Zend Framework 3 module that lets you log exceptions, errors or whatever you wish to the Sentry.io service.
+## What it is?
 
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/cloud-solutions/zend-sentry/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/cloud-solutions/zend-sentry/?branch=master) [![Build Status](https://travis-ci.org/cloud-solutions/zend-sentry.svg?branch=master)](https://travis-ci.org/cloud-solutions/zend-sentry)
+A Laminas Framework module that lets you log exceptions, errors or whatever you wish to the Sentry.io service.
 
-ZendSentry is released under the MIT License.
+## License
 
-The current version of ZendSentry for ZF3 is `3.7.0`. It supports Zend Framework >= 3.0. For other versions see tags in the 1.* series as well as 2.* series. **NB!** We are not supporting the old branches anymore.
+LaminasSentry is released under the MIT License.
 
-# Recent Changes
+## Recent Changes
+
+The current version of LaminasSentry for ZF3 is `3.7.1`. It supports Laminas Framework.
+
+- 3.7.1: Rewrote for application in Laminas Framework
 - 3.7.0: Add option to configure used Ravenjs version, upgrade Ravenjs to `3.27.0`
 - 3.6.0: Add static setter to inject CSP nonce (temporary solution)
 - 3.5.0: Add support for new Sentry DSN, deprecate old DSN for later removal
 - 3.4.0: Add possibility to switch off usage of raven-js CDN
 - 3.3.0: Add possibility to pass config options to ravenjs
 
-# Introduction
+## Introduction
 
-## What's Sentry?
+### What's Sentry?
+
 [Sentry](https://www.getsentry.com/welcome/) is an online service to which you can log anything including your 
 exceptions and errors. Sentry creates nice reports in real time and aggregates your logged data for you.
 
-## What's ZendSentry
-It is a module that builds the bridge between your Zend Framework 3 application and the Sentry.io service. It's extremely
+### What's Laminasentry
+
+It is a module that builds the bridge between your Laminas Framework application and the Sentry.io service. It's extremely
 easy to setup and does a lot of things out-of-the-box.
 
 Features and capabilities:
@@ -42,47 +49,47 @@ Features and capabilities:
 * configure error messages.
 * inject a Content-Security-Policy` nonce for the inline script rendering. Makes it possible for you to create a CSP without `unsafe-inline` as script source.
 
-# Installation
+## Installation
 
-This module is available on [Packagist](https://packagist.org/packages/cloud-solutions/zend-sentry).
+This module is available on [Packagist](https://packagist.org/packages/andrebian/laminas-sentry).
 In your project's `composer.json` use:
 
     {   
         "require": {
-            "cloud-solutions/zend-sentry": "3.7.0"
+            "andrebian/laminas-sentry": "*"
     }
     
 Run `php composer.phar update` to download it into your vendor folder and setup autoloading.
 
-Now copy `zend-sentry.local.php.dist` to `yourapp/config/autoload/zend-sentry.local.php` and add your Sentry API key.
-Then copy `zend-sentry.global.php.dist` to the same place, also removing `.dist`. Adjust settings, if needed.
+Now copy `laminas-sentry.local.php.dist` to `yourapp/config/autoload/laminas-sentry.local.php` and add your Sentry API key (The DSN config provided in your project).
+Then copy `laminas-sentry.global.php.dist` to the same place, also removing `.dist`. Adjust settings, if needed.
 
-Add `ZendSentry` to the modules array in your `application.config.php`, preferably as the first module. 
+Add `LaminasSentry` to the modules array in your `application.config.php`, preferably as the first module. 
 
-That's it. There's nothing more you need to do, everything works at that stage, [try it](#try-it). Happy logging!
+That's it. There's nothing more you need to do, everything works at that stage, [Try it](#try-it). Happy logging!
 
-# Basic Automatic Usage
+## Basic Automatic Usage
 
 Again, you don't need to write a single line of code to make this work. The default settings will make sure Sentry
-is registered as both error and exception handler, [try it](#try-it) by triggering and error or throwing around some 
-exceptions. You should instantly see them in your Sentry dashboard. ZendSentry also packages its own ExceptionStrategies
+is registered as both error and exception handler, [Try it](#try-it) by triggering and error or throwing around some 
+exceptions. You should instantly see them in your Sentry dashboard. LaminasSentry also packages its own ExceptionStrategies
 to make sure, exceptions ZF would otherwise intercept, are logged.
 
-# Manual Usage
+## Manual Usage
 Additonally, the module registers a log event listener on application level. So you can trigger custom log events from
 anywhere in your application.
 
 In a controller, you may do:
 
     $this->getEventManager()->trigger('log', $this, array(
-        'priority' => \Zend\Log\Logger::INFO, 
+        'priority' => \Laminas\Log\Logger::INFO, 
         'message' => 'I am a message and I have been logged'
     ));
 
 Or you can store the returned Sentry `event_id` for processing:
 
     $eventID = $this->getEventManager()->trigger('log', $this, array(
-        'priority' => \Zend\Log\Logger::INFO,
+        'priority' => \Laminas\Log\Logger::INFO,
         'message' => 'I am a message and I have been logged'
     ));
 
@@ -91,7 +98,7 @@ Now you can tell your users or API consumers the ID so they can referr to it, e.
 Make sure to pass `"log"` as the first parameter and `$this` **or** a custom context string as second parameter. 
 Keep this consistent as Sentry will use this for grouping your log entries. As the third parameter, 
 you want to pass an array with a priority key and a message key. It's best to use the priorities provided 
-by the Zend Framework. They will be mapped onto Sentry's own priorities.
+by the Laminas Framework. They will be mapped onto Sentry's own priorities.
 
 Besides the fact that uncaught exceptions and errors are automatically logged, you may also log caught or uncaught
 exceptions manually by using the respective listener directly:
@@ -105,13 +112,13 @@ exceptions manually by using the respective listener directly:
         $eventID = $result->last();
     }
 
-# Using Tags
+## Using Tags
 
 You can also pass your own tags to Sentry. The service will automatically create filtering and sorting for these tags.
 When using the `log` event, you can optionally pass tags like this:
 
     $this->getEventManager()->trigger('log', $this, array(
-        'priority' => \Zend\Log\Logger::INFO,
+        'priority' => \Laminas\Log\Logger::INFO,
         'message' => 'I am a message with a language tag',
         'tags' => array('language' => 'en'),
         'extra' => array('email' => 'test@test.com'),
@@ -129,11 +136,11 @@ If using the `logException` event manually, you can also pass along tags:
 
 See how to use tags for automagically logged exceptions below.
 
-# Raven as Service
+## Raven as Service
 
 The module registers the Raven_Client as an application wide service. Usually you don't want to access it directly
 because triggering the event listeners leaves you with cleaner code. One example where the direct usage of Raven can
-be helpful is for adding user context. For example you might want to do something like this during your bootstrap:
+be helpful is for adding user context. For example, you might want to do something like this during your bootstrap:
 
     if ($authenticationService->hasIdentity()) {
         $ravenClient = $this->serviceManager->get('raven');
@@ -153,16 +160,16 @@ You might want to do something like this e.g. in your `AbstractActionController:
         );
     }
 
-# Injecting a CSP nonce (NB! temporary solution)
+## Injecting a CSP nonce (NB! temporary solution)
 
 If you've already implemented a Content Security Policy in your app, chances are you're using a nonce for dynamic inline javascript. 
-If so, you can now inject your nonce into ZendSentry:
+If so, you can now inject your nonce into LaminasSentry:
 
-    ZendSentry::setCSPNonce(ContentSecurityPolicy::getNonce());
+    LaminasSentry::setCSPNonce(ContentSecurityPolicy::getNonce());
     
 ... where `ContentSecurityPolicy` is your implementation of that http header.
 
-If you inject a nonce, ZendSentry will add it as an attribute to the Raven loading script. Example:
+If you inject a nonce, LaminasSentry will add it as an attribute to the Raven loading script. Example:
 
     <script type="text/javascript" nonce="qlQa7LCu2ZLoVZzpn5s9OJNq7QE=">
         //<![CDATA[
@@ -170,15 +177,15 @@ If you inject a nonce, ZendSentry will add it as an attribute to the Raven loadi
         //]]>
     </script>
     
-Please note that we regard this as a temporary solution. It would be much better for ZendSentry to define its own CSP header.
-Right now Zend Framework is not handling multiple CSP headers the right way (see also [this issue](https://github.com/zendframework/zend-http/issues/159) in `zend-http`).
+Please note that we regard this as a temporary solution. It would be much better for LaminasSentry to define its own CSP header.
+Right now Laminas Framework is not handling multiple CSP headers the right way (see also [this issue](https://github.com/zendframework/zend-http/issues/159) in `zend-http`).
 
-# Configuration options
+## Configuration options
 
 Just for the record, a copy of the actual global configuration options:
 
     /**
-     * Turn ZendSentry off or on as a whole package
+     * Turn LaminasSentry off or on as a whole package
      */
     'use-module' => true,
 
@@ -239,14 +246,14 @@ Just for the record, a copy of the actual global configuration options:
     'handle-javascript-errors' => true,
     
     /**
-     * Should ZendSentry load raven-js via CDN?
+     * Should LaminasSentry load raven-js via CDN?
      * If you set this to false you'll need to make sure to load raven-js some other way.
      */
     'use-ravenjs-cdn' => true,
     
     /**
      * Change the raven-js version loaded via CDN if you need to downgrade or we're lagging behind with updating.
-     * No BC breaks, ZendSentry will set the version if your config is missing the key.
+     * No BC breaks, LaminasSentry will set the version if your config is missing the key.
      */
     'ravenjs-version' => '3.27.0',
 
@@ -268,7 +275,7 @@ Just for the record, a copy of the actual global configuration options:
      */
     'ravenjs-config' => array(),
     
-# Try it
+## Try it
 A few ideas how to try the different features from a Controller or View:
     
     // Test logging of PHP errors

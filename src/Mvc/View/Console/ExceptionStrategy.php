@@ -1,29 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 /**
- * Bright Answer ZendSentry
+ * Andre Cardoso LaminasSentry
  *
- * This source file is part of the Bright Answer ZendSentry package
+ * This source file is part of the Andre Cardoso LaminasSentry package
  *
- * @package    ZendSentry\Mvc\View\Console\ExceptionStrategy
+ * @package    LaminasSentry\Mvc\View\Console\ExceptionStrategy
  * @license    MIT License {@link /docs/LICENSE}
- * @copyright  Copyright (c) 2016, Bright Answer OÜ
+ * @copyright  Copyright (c) 2023, Andre Cardoso
  */
 
-namespace ZendSentry\Mvc\View\Console;
+namespace LaminasSentry\Mvc\View\Console;
 
-use Zend\EventManager\AbstractListenerAggregate;
-use Zend\EventManager\EventManagerInterface;
-use Zend\Mvc\Application;
-use Zend\Mvc\MvcEvent;
-use Zend\Stdlib\ResponseInterface;
-use Zend\View\Model\ConsoleModel;
+use Laminas\EventManager\AbstractListenerAggregate;
+use Laminas\EventManager\EventManagerInterface;
+use Laminas\Mvc\Application;
+use Laminas\Mvc\MvcEvent;
+use Laminas\Stdlib\ResponseInterface;
+use Laminas\View\Model\ConsoleModel;
 
 /**
  * For the moment, this is just an augmented copy of the default ZF ExceptionStrategy
  * This is on purpose despite the duplication of code until the module stabilizes and it's clear what need exactly
  *
- * @package    ZendSentry\Mvc\View\Console\ExceptionStrategy
+ * @package    LaminasSentry\Mvc\View\Console\ExceptionStrategy
  */
 class ExceptionStrategy extends AbstractListenerAggregate
 {
@@ -65,8 +67,10 @@ EOT;
     /**
      * {@inheritDoc}
      */
-    public function attach(EventManagerInterface $events, $priority = 1)
-    {
+    public function attach(
+        EventManagerInterface $events,
+        $priority = 1
+    ) {
         $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH_ERROR, [$this, 'prepareExceptionViewModel']);
         $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER_ERROR, [$this, 'prepareExceptionViewModel']);
     }
@@ -74,13 +78,13 @@ EOT;
     /**
      * Flag: display exceptions in error pages?
      *
-     * @param  bool $displayExceptions
+     * @param bool $displayExceptions
      *
      * @return ExceptionStrategy
      */
-    public function setDisplayExceptions($displayExceptions): ExceptionStrategy
+    public function setDisplayExceptions(bool $displayExceptions): ExceptionStrategy
     {
-        $this->displayExceptions = (bool)$displayExceptions;
+        $this->displayExceptions = $displayExceptions;
         return $this;
     }
 
@@ -138,7 +142,7 @@ EOT;
      *
      * @return self
      */
-    public function setDefaultExceptionMessage($defaultExceptionMessage): self
+    public function setDefaultExceptionMessage(string $defaultExceptionMessage): self
     {
         $this->defaultExceptionMessage = $defaultExceptionMessage;
         return $this;
@@ -147,7 +151,7 @@ EOT;
     /**
      * Create an exception view model, and set the console status code
      *
-     * @param  MvcEvent $e
+     * @param MvcEvent $e
      *
      * @return void
      */
@@ -183,7 +187,7 @@ EOT;
 
                 if (\is_callable($this->message)) {
                     $callback = $this->message;
-                    $message  = (string)$callback($exception, $this->displayExceptions);
+                    $message = (string)$callback($exception, $this->displayExceptions);
                 } elseif ($this->displayExceptions && $exception instanceof \Exception) {
                     /* @var $exception \Exception */
                     $message = str_replace(

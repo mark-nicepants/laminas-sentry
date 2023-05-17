@@ -1,30 +1,32 @@
 <?php
 
+declare(strict_types=1);
+
 /**
- * Bright Answer ZendSentry
+ * Andre Cardoso LaminasSentry
  *
- * This source file is part of the Bright Answer ZendSentry package
+ * This source file is part of the Andre Cardoso LaminasSentry package
  *
- * @package    ZendSentry\Mvc\View\Http\ExceptionStrategy
+ * @package    LaminasSentry\Mvc\View\Http\ExceptionStrategy
  * @license    MIT License {@link /docs/LICENSE}
- * @copyright  Copyright (c) 2016, Bright Answer OÜ
+ * @copyright  Copyright (c) 2023, Andre Cardoso
  */
 
-namespace ZendSentry\Mvc\View\Http;
+namespace LaminasSentry\Mvc\View\Http;
 
-use Zend\EventManager\AbstractListenerAggregate;
-use Zend\EventManager\EventManagerInterface;
-use Zend\Http\Response as HttpResponse;
-use Zend\Mvc\Application;
-use Zend\Mvc\MvcEvent;
-use Zend\Stdlib\ResponseInterface as Response;
-use Zend\View\Model\ViewModel;
+use Laminas\EventManager\AbstractListenerAggregate;
+use Laminas\EventManager\EventManagerInterface;
+use Laminas\Http\Response;
+use Laminas\Http\Response as HttpResponse;
+use Laminas\Mvc\Application;
+use Laminas\Mvc\MvcEvent;
+use Laminas\View\Model\ViewModel;
 
 /**
  * For the moment, this is just an augmented copy of the default ZF ExceptionStrategy
  * This is on purpose despite the duplication of code until the module stabilizes and it's clear what need exactly
  *
- * @package    ZendSentry\Mvc\View\Http\ExceptionStrategy
+ * @package    LaminasSentry\Mvc\View\Http\ExceptionStrategy
  */
 class ExceptionStrategy extends AbstractListenerAggregate
 {
@@ -52,8 +54,10 @@ class ExceptionStrategy extends AbstractListenerAggregate
     /**
      * {@inheritDoc}
      */
-    public function attach(EventManagerInterface $events, $priority = 1)
-    {
+    public function attach(
+        EventManagerInterface $events,
+        $priority = 1
+    ) {
         $this->listeners[] = $events->attach(MvcEvent::EVENT_DISPATCH_ERROR, [$this, 'prepareExceptionViewModel']);
         $this->listeners[] = $events->attach(MvcEvent::EVENT_RENDER_ERROR, [$this, 'prepareExceptionViewModel']);
     }
@@ -61,13 +65,13 @@ class ExceptionStrategy extends AbstractListenerAggregate
     /**
      * Flag: display exceptions in error pages?
      *
-     * @param  bool $displayExceptions
+     * @param bool $displayExceptions
      *
      * @return ExceptionStrategy
      */
-    public function setDisplayExceptions($displayExceptions): ExceptionStrategy
+    public function setDisplayExceptions(bool $displayExceptions): ExceptionStrategy
     {
-        $this->displayExceptions = (bool)$displayExceptions;
+        $this->displayExceptions = $displayExceptions;
         return $this;
     }
 
@@ -78,7 +82,7 @@ class ExceptionStrategy extends AbstractListenerAggregate
      *
      * @return self
      */
-    public function setDefaultExceptionMessage($defaultExceptionMessage): self
+    public function setDefaultExceptionMessage(string $defaultExceptionMessage): self
     {
         $this->defaultExceptionMessage = $defaultExceptionMessage;
         return $this;
@@ -87,7 +91,7 @@ class ExceptionStrategy extends AbstractListenerAggregate
     /**
      * Create an exception view model, and set the HTTP status code
      *
-     * @param  MvcEvent $e
+     * @param MvcEvent $e
      *
      * @return void
      */
@@ -127,8 +131,8 @@ class ExceptionStrategy extends AbstractListenerAggregate
 
                 $model = new ViewModel(
                     [
-                        'message'            => sprintf($this->defaultExceptionMessage, $eventID->last()),
-                        'exception'          => $e->getParam('exception'),
+                        'message' => sprintf($this->defaultExceptionMessage, $eventID->last()),
+                        'exception' => $e->getParam('exception'),
                         'display_exceptions' => $this->displayExceptions(),
                     ]
                 );
@@ -137,7 +141,7 @@ class ExceptionStrategy extends AbstractListenerAggregate
 
                 /** @var HttpResponse $response */
                 $response = $e->getResponse();
-                if (!$response) {
+                if (! $response) {
                     $response = new HttpResponse();
                     $response->setStatusCode(500);
                     $e->setResponse($response);
@@ -175,13 +179,13 @@ class ExceptionStrategy extends AbstractListenerAggregate
     /**
      * Set the exception template
      *
-     * @param  string $exceptionTemplate
+     * @param string $exceptionTemplate
      *
      * @return ExceptionStrategy
      */
-    public function setExceptionTemplate($exceptionTemplate): ExceptionStrategy
+    public function setExceptionTemplate(string $exceptionTemplate): ExceptionStrategy
     {
-        $this->exceptionTemplate = (string)$exceptionTemplate;
+        $this->exceptionTemplate = $exceptionTemplate;
         return $this;
     }
 }
