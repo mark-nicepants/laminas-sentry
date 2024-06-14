@@ -17,7 +17,7 @@ class ModuleTest extends TestCase
      */
     private $module;
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
         $this->module = new LaminasSentryModule();

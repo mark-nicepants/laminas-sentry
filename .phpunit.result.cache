@@ -1,0 +1,1 @@
+{"version":1,"defects":{"LaminasSentryTests\\ModuleTest::testDefaultModuleConfig":4,"LaminasSentryTests\\ModuleTest::testAutoloaderConfig":4},"times":{"LaminasSentryTests\\ModuleTest::testDefaultModuleConfig":0.003,"LaminasSentryTests\\ModuleTest::testAutoloaderConfig":0}}
